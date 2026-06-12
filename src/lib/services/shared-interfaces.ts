@@ -1,15 +1,15 @@
 export interface WeatherData{
-    probabilityOfRain : Number,
-    humidity : Number,
-    temp : Number,
+    probabilityOfRain : number,
+    humidity : number,
+    temp : number,
 }
 
-export interface EntryRespone{
-    longitiude : Number,
-    latitude : Number,
-    probabilityOfRain : Number,
-    humidity : Number,
-    temp : Number,
+export interface EntryResponse{
+    longitiude : number,
+    latitude : number,
+    probabilityOfRain : number,
+    humidity : number,
+    temp : number,
     summary : string,
     recommendation : string,
     suitableActivities: string,
@@ -26,9 +26,9 @@ export interface Ai{
 }
 
 export interface Weather{
-    GetForcast: (longitiude: Number, latitude: Number) => WeatherData,
+    GetForcast: (longitiude: number, latitude: number) => WeatherData,
 }
 
 export interface Controller{
-    GetResponse: (location : {longitiude: Number, latitude: Number}) => EntryRespone,
+    GetResponse: (location : {longitiude: number, latitude: number}) => EntryResponse,
 }
