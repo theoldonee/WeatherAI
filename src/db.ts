@@ -1,6 +1,6 @@
 import prisma from "./lib/prisma";
 
-export const CheckForData = async (date: Date, longitiude: number, latitude: number) => {
+export const CheckForData = async (longitiude: number, latitude: number) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const forcast = await prisma.weather.findMany({
         where: { 
