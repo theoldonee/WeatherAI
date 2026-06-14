@@ -9,9 +9,14 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model weather {
-  id         BigInt   @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  forcast    Json?    @db.Json
-  longitude  Decimal? @db.Decimal
-  latitude   Decimal? @db.Decimal
+  id                  BigInt   @id @default(autoincrement())
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  longitude           Decimal? @db.Decimal
+  latitude            Decimal? @db.Decimal
+  probability_of_rain Decimal? @db.Decimal
+  humidity            Decimal? @db.Decimal
+  temp_c              Decimal? @map("temp c") @db.Decimal
+  summary             String?
+  recommendation      String?
+  suitable_activities String?
 }
