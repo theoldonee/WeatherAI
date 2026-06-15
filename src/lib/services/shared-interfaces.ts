@@ -30,5 +30,5 @@ export interface Weather{
 }
 
 export interface Controller{
-    GetResponse: (location : {longitiude: number, latitude: number}) => EntryResponse,
+    GetResponse: (location : {longitiude: number, latitude: number}) => Promise<EntryResponse>,
 }
