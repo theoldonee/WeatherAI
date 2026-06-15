@@ -22,4 +22,25 @@ export const CheckForData = async (longitiude: number, latitude: number) => {
     return result;
 }
 
-// add
+// add 
+export const addData = async (
+    location: {longitiude: number, latitude: number}, 
+    weatherData: {probabilityOfRain : number, humidity : number, temp : number,},
+    aiResponse: {summary : string, recommendation : string, suitableActivities: string,}
+) => {
+
+    const data = {
+    created_at: new Date(),
+    longitude: location.longitiude,
+    latitude: location.latitude,
+    probability_of_rain: weatherData.probabilityOfRain,
+    humidity: weatherData.humidity,
+    temp_c: weatherData.temp,
+    summary: aiResponse.summary,
+    recommendation: aiResponse.recommendation,
+    suitable_activities: aiResponse.suitableActivities,
+
+    }
+
+    await prisma.weather.create({data});
+}
