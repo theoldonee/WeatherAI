@@ -1,5 +1,6 @@
 import { Weather } from "./weather";
 import { Ai } from "./ai";
+import  * as db  from "./db";
 
 import {
     EntryResponse,
@@ -15,28 +16,50 @@ class Controller implements ControllerInterface{
     private ai : AiInterface = new Ai();
     private weather : WeatherInterface = new Weather();
 
-    GetResponse(location : {longitiude: number, latitude: number}) : EntryResponse{
+    GetResponse(location : {longitiude: number, latitude: number}) : Promise<EntryResponse>{
+
+        let weatherData : WeatherData;
+        let aiResponse: AiResponse ;
 
         // validate if data already exist
-        const weatherData : WeatherData =  this.weather.GetForcast(location.longitiude, location.latitude);
+        const result = this.CheckDb(location).then(searchResult =>{
 
-        const aiResponse: AiResponse =  this.ai.GetSummery(weatherData);
+            if(searchResult){
+                weatherData = {
+                    probabilityOfRain: Number(searchResult.probability_of_rain),
+                    temp: Number(searchResult.temp_c),
+                    humidity: Number(searchResult.humidity),
 
-        const result : EntryResponse =  {
-            ...location,
-            ...weatherData,
-            ...aiResponse
-        };
+                };
+
+                aiResponse = {
+                    summary: searchResult.summary,
+                    suitableActivities: searchResult.suitable_activities,
+                    recommendation: searchResult.recommendation
+                }
+            }
+            else{
+                weatherData =  this.weather.GetForcast(location.longitiude, location.latitude);
+                aiResponse =  this.ai.GetSummery(weatherData);
+            }
+
+            return {
+                ...location,
+                ...weatherData,
+                ...aiResponse
+            }
+
+        });
 
         return result;
     }
 
-    CheckDb(location : {longitiude: number, latitude: number}){
+    async CheckDb(location : {longitiude: number, latitude: number}){
         // check 
-        const date = Date.now();
 
+        const recentData = await db.CheckForData(location.longitiude, location.latitude);
         
-        
+        return recentData;
     }
 }
 
