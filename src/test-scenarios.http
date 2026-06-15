@@ -1,0 +1,95 @@
+### WeatherAI - Test Scenarios
+### REST Client (VS Code extension: humao.rest-client)
+### Run each scenario with Ctrl+Alt+R (or click "Send Request" above each ###)
+
+@baseUrl = http://localhost:3000
+
+# ─────────────────────────────────────────────
+# Scenario 1 - Perfect sunny day
+# ─────────────────────────────────────────────
+### Scenario 1: Perfect sunny day
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 28,
+  "humidity": 40,
+  "probabilityOfRain": 5
+}
+
+# ─────────────────────────────────────────────
+# Scenario 2 - Heavy rain incoming
+# ─────────────────────────────────────────────
+### Scenario 2: Heavy rain incoming
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 22,
+  "humidity": 95,
+  "probabilityOfRain": 90
+}
+
+# ─────────────────────────────────────────────
+# Scenario 3 - Hot and humid
+# ─────────────────────────────────────────────
+### Scenario 3: Hot and humid
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 38,
+  "humidity": 85,
+  "probabilityOfRain": 20
+}
+
+# ─────────────────────────────────────────────
+# Scenario 4 - Cold and dry
+# ─────────────────────────────────────────────
+### Scenario 4: Cold and dry
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 10,
+  "humidity": 30,
+  "probabilityOfRain": 10
+}
+
+# ─────────────────────────────────────────────
+# Scenario 5 - Stormy conditions
+# ─────────────────────────────────────────────
+### Scenario 5: Stormy conditions
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 18,
+  "humidity": 99,
+  "probabilityOfRain": 95
+}
+
+# ─────────────────────────────────────────────
+# Scenario 6 - Mild spring day
+# ─────────────────────────────────────────────
+### Scenario 6: Mild spring day
+POST {{baseUrl}}/api/weather
+Content-Type: application/json
+
+{
+  "latitude": -20.2,
+  "longitude": 57.5,
+  "temp": 23,
+  "humidity": 60,
+  "probabilityOfRain": 30
+}
