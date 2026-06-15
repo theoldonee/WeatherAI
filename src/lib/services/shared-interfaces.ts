@@ -6,6 +6,7 @@ export interface WeatherData{
 
 export interface EntryResponse{
     longitiude : number,
+    longitude : number,
     latitude : number,
     probabilityOfRain : number,
     humidity : number,
@@ -22,7 +23,7 @@ export interface AiResponse{
 }
 
 export interface Ai{
-    GetSummery: (weatherData:WeatherData) => AiResponse,
+    GetSummery: (weatherData:WeatherData) => AiResponse | Promise<AiResponse>,
 }
 
 export interface Weather{

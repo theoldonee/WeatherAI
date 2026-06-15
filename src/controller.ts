@@ -1,5 +1,5 @@
 import { Weather } from "./weather";
-import { Ai } from "./ai";
+import { Ai, generateWeatherSummary } from "./ai";
 import  * as db  from "./db";
 
 import {
@@ -22,14 +22,13 @@ class Controller implements ControllerInterface{
         let aiResponse: AiResponse ;
 
         // validate if data already exist
-        const result = this.CheckDb(location).then(searchResult =>{
+        const result = this.CheckDb(location).then(async searchResult =>{
 
             if(searchResult){
                 weatherData = {
                     probabilityOfRain: Number(searchResult.probability_of_rain),
                     temp: Number(searchResult.temp_c),
                     humidity: Number(searchResult.humidity),
-
                 };
 
                 aiResponse = {
@@ -40,15 +39,33 @@ class Controller implements ControllerInterface{
             }
             else{
                 weatherData =  this.weather.GetForcast(location.longitiude, location.latitude);
-                aiResponse =  this.ai.GetSummery(weatherData);
+                const aiResult = await generateWeatherSummary({
+                    temp: weatherData.temp,
+                    humidity: weatherData.humidity,
+                    probabilityOfRain: weatherData.probabilityOfRain,
+                    latitude: location.latitude,
+                    longitude: location.longitiude
+                });
 
-                db.addData(location, weatherData, aiResponse);
+                aiResponse = {
+                    summary: aiResult.summary,
+                    recommendation: aiResult.recommendation,
+                    suitableActivities: aiResult.suitableActivities.join(', ')
+                };
+
+                await db.addData(location, weatherData, aiResponse);
             }
 
             return {
-                ...location,
-                ...weatherData,
-                ...aiResponse
+                longitiude: location.longitiude,
+                longitude: location.longitiude,
+                latitude: location.latitude,
+                probabilityOfRain: weatherData.probabilityOfRain,
+                humidity: weatherData.humidity,
+                temp: weatherData.temp,
+                summary: aiResponse.summary,
+                recommendation: aiResponse.recommendation,
+                suitableActivities: aiResponse.suitableActivities
             }
 
         });
