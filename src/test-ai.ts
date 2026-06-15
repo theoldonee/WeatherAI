@@ -1,5 +1,6 @@
 import { generateWeatherSummary } from "./ai";
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 
 async function runTest() {
   const mockWeatherData = {
