@@ -41,6 +41,8 @@ class Controller implements ControllerInterface{
             else{
                 weatherData =  this.weather.GetForcast(location.longitiude, location.latitude);
                 aiResponse =  this.ai.GetSummery(weatherData);
+
+                db.addData(location, weatherData, aiResponse);
             }
 
             return {
