@@ -116,7 +116,7 @@ function getFallbackSummary(data: WeatherInput): AiSummaryResponse {
 }
 
 export class Ai {
-  async GetSummery(weatherData: any): Promise<any> {
+  async GetSummery(weatherData: Omit<WeatherInput, 'latitude' | 'longitude'>): Promise<AiSummaryResponse> {
     return generateWeatherSummary({
       temp: weatherData.temp,
       humidity: weatherData.humidity,

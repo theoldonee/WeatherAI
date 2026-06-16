@@ -13,16 +13,15 @@ const prisma = new PrismaClient({
 const weatherData = [
   {
     created_at: new Date(),
-    forcast: {
-        probabilityOfRain : 20,
-        humidity : 80,
-        temp : 20,
-    },
+    probability_of_rain: 20,
+    humidity: 80,
+    temp_c: 20,
     longitude: 10,
     latitude: 15,
-
+    summary: "Cloudy and humid.",
+    recommendation: "Take an umbrella just in case.",
+    suitable_activities: "Indoor games, Reading",
   },
-  
 ];
 
 export async function main() {
