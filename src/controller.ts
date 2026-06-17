@@ -50,7 +50,7 @@ class Controller implements ControllerInterface{
                 aiResponse = {
                     summary: aiResult.summary,
                     recommendation: aiResult.recommendation,
-                    suitableActivities: aiResult.suitableActivities.join(', ')
+                    suitableActivities: aiResult.suitableActivities
                 };
 
                 await db.addData(location, weatherData, aiResponse);

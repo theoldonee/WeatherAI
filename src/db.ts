@@ -1,4 +1,5 @@
 import prisma from "./lib/prisma";
+import { WeatherData, AiResponse } from "./lib/services/shared-interfaces";
 
 export const CheckForData = async (longitiude: number, latitude: number) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -25,8 +26,8 @@ export const CheckForData = async (longitiude: number, latitude: number) => {
 // add 
 export const addData = async (
     location: {longitiude: number, latitude: number}, 
-    weatherData: {probabilityOfRain : number, humidity : number, temp : number,},
-    aiResponse: {summary : string, recommendation : string, suitableActivities: string,}
+    weatherData: WeatherData,
+    aiResponse: AiResponse
 ) => {
 
     const data = {

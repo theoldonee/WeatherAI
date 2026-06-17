@@ -1,6 +1,8 @@
 import Groq from "groq-sdk";
+import { WeatherData, AiResponse, Ai as AiInterface } from "@/lib/services/shared-interfaces";
 
-export interface WeatherInput {
+// Internal type — extends WeatherData with location coords needed for the AI prompt
+interface WeatherInput {
   temp: number;
   humidity: number;
   probabilityOfRain: number;
@@ -8,15 +10,9 @@ export interface WeatherInput {
   longitude: number;
 }
 
-export interface AiSummaryResponse {
-  summary: string;
-  recommendation: string;
-  suitableActivities: string[];
-}
-
 export async function generateWeatherSummary(
   data: WeatherInput
-): Promise<AiSummaryResponse> {
+): Promise<AiResponse> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     console.warn("GROQ_API_KEY is not defined in process.env. Returning fallback weather summary.");
@@ -25,7 +21,7 @@ export async function generateWeatherSummary(
 
   try {
     const groq = new Groq({ apiKey });
-    const prompt = `You are a weather assistant. Given the following weather data, generate a summary, a recommendation, and a list of suitable activities.
+    const prompt = `You are a weather assistant. Given the following weather data, generate a summary, a recommendation, and a comma-separated list of suitable activities.
 
 Weather Data:
 - Temperature: ${data.temp}°C
@@ -38,7 +34,7 @@ The JSON object must have exactly these keys:
 {
   "summary": "A concise summary of the weather",
   "recommendation": "A recommendation based on the weather",
-  "suitableActivities": ["Activity 1", "Activity 2", ...]
+  "suitableActivities": "Activity 1, Activity 2, Activity 3"
 }`;
 
     const chatCompletion = await groq.chat.completions.create({
@@ -75,9 +71,10 @@ The JSON object must have exactly these keys:
     return {
       summary: result.summary || "No summary available.",
       recommendation: result.recommendation || "No recommendation available.",
+      // Handle both string and array responses from the model gracefully
       suitableActivities: Array.isArray(result.suitableActivities)
-        ? result.suitableActivities
-        : ["No activities listed."],
+        ? result.suitableActivities.join(", ")
+        : (result.suitableActivities || "No activities listed."),
     };
   } catch (error) {
     console.error("Failed to generate weather summary using Groq:", error);
@@ -85,27 +82,27 @@ The JSON object must have exactly these keys:
   }
 }
 
-function getFallbackSummary(data: WeatherInput): AiSummaryResponse {
+function getFallbackSummary(data: WeatherInput): AiResponse {
   let summary = `The weather is currently ${data.temp}°C with ${data.humidity}% humidity.`;
   let recommendation = "Enjoy your day!";
-  let suitableActivities = ["General indoor activities"];
+  let suitableActivities = "General indoor activities";
 
   if (data.probabilityOfRain > 50) {
     summary += " It is likely to rain.";
     recommendation = "Don't forget your umbrella!";
-    suitableActivities = ["Reading", "Watching a movie", "Indoor games"];
+    suitableActivities = "Reading, Watching a movie, Indoor games";
   } else if (data.temp > 30) {
     summary += " It is quite hot outside.";
     recommendation = "Stay hydrated and avoid direct sunlight.";
-    suitableActivities = ["Swimming", "Indoor exercise", "Staying in AC"];
+    suitableActivities = "Swimming, Indoor exercise, Staying in AC";
   } else if (data.temp < 10) {
     summary += " It is cold outside.";
     recommendation = "Wear warm clothes.";
-    suitableActivities = ["Drinking hot chocolate", "Indoor board games"];
+    suitableActivities = "Drinking hot chocolate, Indoor board games";
   } else {
     summary += " The weather is pleasant.";
     recommendation = "A good day for outdoor activities.";
-    suitableActivities = ["Walking in the park", "Cycling", "Sightseeing"];
+    suitableActivities = "Walking in the park, Cycling, Sightseeing";
   }
 
   return {
@@ -115,8 +112,8 @@ function getFallbackSummary(data: WeatherInput): AiSummaryResponse {
   };
 }
 
-export class Ai {
-  async GetSummery(weatherData: Omit<WeatherInput, 'latitude' | 'longitude'>): Promise<AiSummaryResponse> {
+export class Ai implements AiInterface {
+  async GetSummery(weatherData: WeatherData): Promise<AiResponse> {
     return generateWeatherSummary({
       temp: weatherData.temp,
       humidity: weatherData.humidity,
