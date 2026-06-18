@@ -1,50 +1,44 @@
 /**
  * Frontend TypeScript types for the WeatherAI dashboard.
  *
- * These interfaces reflect the actual POST /api/weather contract
- * defined in src/app/api/weather/route.ts — NOT the Controller
- * or EntryResponse interfaces (which are unused by the active route).
+ * These interfaces reflect the actual POST /api/weather contract —
+ * now wired through the Controller (only lat/lng sent, full data returned).
+ * Aligned with EntryResponse from src/lib/services/shared-interfaces.ts
  */
 
 /**
- * Form state: all fields are strings because HTML inputs are strings.
- * Converted to numbers before the API call.
+ * Form/map state: only coordinates are needed.
+ * The Controller fetches weather and AI data internally.
  */
 export interface WeatherFormState {
   latitude: string;
   longitude: string;
-  temp: string;
-  humidity: string;
-  probabilityOfRain: string;
 }
 
 /**
  * The exact body sent to POST /api/weather.
- * All fields must be numbers as validated by the route handler.
+ * Only lat/lng — Controller handles the rest.
  */
 export interface WeatherApiRequest {
   latitude: number;
   longitude: number;
-  temp: number;
-  humidity: number;
-  probabilityOfRain: number;
 }
 
 /**
- * The exact 200 OK response from POST /api/weather.
- * suitableActivities is string[] — the route handler returns the
- * raw array from generateWeatherSummary(), not the comma-joined string
- * produced by Controller.GetResponse().
+ * The exact 200 OK response from POST /api/weather (via Controller.GetResponse).
+ * Matches EntryResponse from shared-interfaces.ts.
+ * suitableActivities is a comma-joined string (e.g. "Hiking, Cycling, Running").
  */
 export interface WeatherApiResponse {
-  latitude: number;
+  longitiude: number; // backend typo preserved from shared-interfaces
   longitude: number;
-  temp: number;
-  humidity: number;
+  latitude: number;
   probabilityOfRain: number;
+  humidity: number;
+  temp: number;
   summary: string;
   recommendation: string;
-  suitableActivities: string[];
+  suitableActivities: string; // comma-joined string, NOT array
 }
 
 /**

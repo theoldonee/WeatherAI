@@ -2,115 +2,57 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { LocationForm } from "./LocationForm";
+import { SparklesIcon, CompassIcon } from "lucide-react";
+import { MapPicker } from "./MapPicker";
 import { MetricCards } from "./MetricCards";
 import { AiSummaryPanel } from "./AiSummaryPanel";
 import { ActivitiesList } from "./ActivitiesList";
 import { ResultSkeleton } from "./ResultSkeleton";
+import { Button } from "@/components/ui/button";
 import type {
-  WeatherFormState,
   WeatherApiRequest,
   WeatherApiResponse,
   FetchState,
 } from "./types";
+import "leaflet/dist/leaflet.css";
 
 /**
  * WeatherDashboard — Main Orchestration Component
  *
  * This is the top-level 'use client' component. It owns all state:
- *   - formData:   the five input fields (strings)
+ *   - coords:     { latitude, longitude } from the MapPicker
  *   - fetchState: idle | loading | success | error
  *   - result:     the WeatherApiResponse or null
  *
  * API Integration: POST /api/weather
- *   - Endpoint defined in src/app/api/weather/route.ts
- *   - Request body: { latitude, longitude, temp, humidity, probabilityOfRain }
- *     all must be numbers (validated by the route handler)
- *   - Success (200): returns summary, recommendation, suitableActivities (string[])
- *   - Error (400): missing/invalid fields
- *   - Error (500): internal server error
- *
- * Backend notes documented in implementation_plan.md:
- *   - Weather module is a stub → user must supply all 5 fields manually
- *   - Controller/DB cache not wired → every request hits Groq (~1–3s)
- *   - suitableActivities is string[] (not comma-joined string from Controller)
+ *   - Request body: { latitude, longitude }
+ *   - Route handler calls Controller.GetResponse()
+ *   - Controller handles: DB cache check → Weather stub → AI Generation → DB save
  */
 
-const INITIAL_FORM: WeatherFormState = {
-  latitude: "",
-  longitude: "",
-  temp: "",
-  humidity: "",
-  probabilityOfRain: "",
-};
-
-/** Parse and validate a numeric field from the form. Returns null if invalid. */
-function parseNumber(value: string, label: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === "") {
-    toast.error(`${label} is required.`);
-    return null;
-  }
-  const n = Number(trimmed);
-  if (isNaN(n)) {
-    toast.error(`${label} must be a valid number.`);
-    return null;
-  }
-  return n;
-}
-
-/** Validate that percentage fields are within [0, 100]. */
-function validatePercent(value: number, label: string): boolean {
-  if (value < 0 || value > 100) {
-    toast.error(`${label} must be between 0 and 100.`);
-    return false;
-  }
-  return true;
-}
-
 export function WeatherDashboard() {
-  const [formData, setFormData] = useState<WeatherFormState>(INITIAL_FORM);
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
   const [fetchState, setFetchState] = useState<FetchState>("idle");
   const [result, setResult] = useState<WeatherApiResponse | null>(null);
 
-  const handleChange = useCallback(
-    (field: keyof WeatherFormState, value: string) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-    },
-    []
-  );
+  const handleLocationSelect = useCallback((lat: number, lng: number) => {
+    setCoords({ lat, lng });
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    // ── 1. Parse and validate all five fields ──────────────────────────────
-    const latitude = parseNumber(formData.latitude, "Latitude");
-    if (latitude === null) return;
-
-    const longitude = parseNumber(formData.longitude, "Longitude");
-    if (longitude === null) return;
-
-    const temp = parseNumber(formData.temp, "Temperature");
-    if (temp === null) return;
-
-    const humidity = parseNumber(formData.humidity, "Humidity");
-    if (humidity === null) return;
-    if (!validatePercent(humidity, "Humidity")) return;
-
-    const probabilityOfRain = parseNumber(
-      formData.probabilityOfRain,
-      "Rain probability"
-    );
-    if (probabilityOfRain === null) return;
-    if (!validatePercent(probabilityOfRain, "Rain probability")) return;
+    if (coords.lat === null || coords.lng === null) {
+      toast.error("Please select a location on the map first.");
+      return;
+    }
 
     const requestBody: WeatherApiRequest = {
-      latitude,
-      longitude,
-      temp,
-      humidity,
-      probabilityOfRain,
+      latitude: coords.lat,
+      longitude: coords.lng,
     };
 
-    // ── 2. Call POST /api/weather ──────────────────────────────────────────
     setFetchState("loading");
     setResult(null);
 
@@ -124,7 +66,6 @@ export function WeatherDashboard() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Route returns { error: string } on 400/500
         const message =
           data?.error ?? "Something went wrong. Please try again.";
         toast.error(message);
@@ -132,45 +73,60 @@ export function WeatherDashboard() {
         return;
       }
 
-      // ── 3. Success ──────────────────────────────────────────────────────
       setResult(data as WeatherApiResponse);
       setFetchState("success");
       toast.success("AI forecast generated successfully.");
     } catch (err) {
-      // Network errors (no response at all)
       console.error("WeatherDashboard fetch error:", err);
       toast.error("Network error. Check your connection and try again.");
       setFetchState("error");
     }
-  }, [formData]);
+  }, [coords]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12 flex flex-col gap-10">
-      {/* ── Page heading ──────────────────────────────────────────────── */}
+      {/* ── Page heading ── */}
       <div className="flex flex-col gap-2">
         <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
           Weather Forecast
         </h1>
         <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-          Enter your location coordinates and current weather metrics to receive
-          an AI-generated summary, recommendation, and activity suggestions
-          powered by LLaMA 3.1.
+          Drop a pin on the map to receive an AI-generated summary,
+          recommendation, and activity suggestions powered by LLaMA 3.1.
         </p>
       </div>
 
-      {/* ── Main layout: form left | results right ─────────────────────── */}
+      {/* ── Main layout: map left | results right ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
-        {/* Input panel */}
+        {/* Input panel (Map) */}
         <aside
-          className="lg:sticky lg:top-24 rounded-none border border-border bg-card p-8 shadow-sm"
-          aria-label="Weather input form"
+          className="lg:sticky lg:top-24 flex flex-col gap-6 p-6 rounded-none border border-border bg-card shadow-sm"
+          aria-label="Location selection"
         >
-          <LocationForm
-            formData={formData}
+          <div className="flex items-center gap-2 mb-2">
+            <CompassIcon className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-foreground">
+              Select Location
+            </h2>
+          </div>
+
+          <MapPicker
+            latitude={coords.lat}
+            longitude={coords.lng}
+            onLocationSelect={handleLocationSelect}
             isLoading={fetchState === "loading"}
-            onChange={handleChange}
-            onSubmit={handleSubmit}
           />
+
+          <Button
+            id="get-forecast-btn"
+            onClick={handleSubmit}
+            disabled={fetchState === "loading" || coords.lat === null}
+            size="lg"
+            className="w-full"
+          >
+            <SparklesIcon className="size-4 mr-2" />
+            {fetchState === "loading" ? "Generating Forecast…" : "Get AI Forecast"}
+          </Button>
         </aside>
 
         {/* Results panel */}
@@ -181,11 +137,11 @@ export function WeatherDashboard() {
               className="flex flex-col items-center justify-center h-64 rounded-none border border-dashed border-border text-center px-8 gap-3"
             >
               <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
-                Awaiting Input
+                Awaiting Selection
               </p>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Fill in the form and click <strong>Get AI Forecast</strong> to
-                see results.
+                Drop a pin on the map and click <strong>Get AI Forecast</strong>{" "}
+                to see results.
               </p>
             </div>
           )}
@@ -209,8 +165,7 @@ export function WeatherDashboard() {
                 Request Failed
               </p>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Check the toast notification for details, then correct your
-                inputs and try again.
+                Check the toast notification for details and try another location.
               </p>
             </div>
           )}
