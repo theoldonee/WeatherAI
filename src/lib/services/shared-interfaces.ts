@@ -27,7 +27,7 @@ export interface Ai{
 }
 
 export interface Weather{
-    GetForcast: (longitiude: number, latitude: number) => WeatherData,
+    GetForcast: (longitiude: number, latitude: number) => Promise<WeatherData>,
 }
 
 export interface Controller{
