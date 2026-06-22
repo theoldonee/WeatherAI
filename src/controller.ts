@@ -38,7 +38,7 @@ class Controller implements ControllerInterface{
                 }
             }
             else{
-                weatherData =  this.weather.GetForcast(location.longitiude, location.latitude);
+                weatherData = await this.weather.GetForcast(location.longitiude, location.latitude);
                 const aiResult = await generateWeatherSummary({
                     temp: weatherData.temp,
                     humidity: weatherData.humidity,
